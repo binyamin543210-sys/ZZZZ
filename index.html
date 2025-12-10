@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BNAPP V3.5</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- ספריות גלובליות -->
+  <script defer src="https://cdn.jsdelivr.net/npm/hebcal@2.0.2/dist/hebcal.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- קוד האפליקציה כמודול (מייבא firebase-config.js) -->
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="header-top">
+        <button id="btnThemeToggle" class="icon-btn" aria-label="החלפת מצב בהיר/כהה">☀️/🌙</button>
+        <div class="app-title">BNAPP V3.5</div>
+        <button id="btnGihari" class="primary-pill">ג'יחרי</button>
+      </div>
+      <div class="header-bottom">
+        <button id="btnPrevMonth" class="icon-btn">‹</button>
+        <div class="month-label">
+          <span id="gregMonthLabel"></span>
+          <span id="hebrewMonthLabel" class="sub-label"></span>
+        </div>
+        <button id="btnNextMonth" class="icon-btn">›</button>
+      </div>
+      <div class="header-row">
+        <select id="userSelect" class="pill-select">
+          <option value="binyamin">בנימין</option>
+          <option value="nana">ננה</option>
+          <option value="shared">משותף</option>
+        </select>
+        <button id="btnToday" class="ghost-pill">היום</button>
+        <button id="btnCity" class="ghost-pill">עיר: <span id="cityLabel">לא נבחרה</span></button>
+      </div>
+    </header>
+
+    <main>
+      <section id="calendarSection" class="screen active">
+        <div class="weekday-row">
+          <div>א'</div><div>ב'</div><div>ג'</div><div>ד'</div><div>ה'</div><div>ו'</div><div>ש'</div>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </section>
+
+      <section id="tasksSection" class="screen">
+        <div class="section-header">
+          <h2>משימות</h2>
+          <button id="btnAddTask" class="primary-pill">+ משימה</button>
+        </div>
+        <div class="segmented">
+          <button data-filter="undated" class="segmented-btn active">ללא תאריך</button>
+          <button data-filter="dated" class="segmented-btn">מתוארכות</button>
+          <button data-filter="recurring" class="segmented-btn">חוזרות</button>
+        </div>
+        <div id="tasksList" class="list-container"></div>
+      </section>
+
+      <section id="shoppingSection" class="screen">
+        <div class="section-header">
+          <h2>רשימת קניות</h2>
+        </div>
+        <div class="segmented">
+          <button data-list="default" class="segmented-btn active">רגיל</button>
+          <button data-list="shabbat" class="segmented-btn">קניות לשבת</button>
+          <button data-list="pesach" class="segmented-btn">קניות לפסח</button>
+          <button data-list="holiday" class="segmented-btn">קניות לחג</button>
+        </div>
+        <div class="shopping-input-row">
+          <input id="shoppingInput" type="text" placeholder="הוסף פריט..." />
+          <button id="btnAddShopping" class="primary-pill">+</button>
+        </div>
+        <ul id="shoppingList" class="list-container"></ul>
+      </section>
+
+      <section id="statsSection" class="screen">
+        <div class="section-header">
+          <h2>סטטיסטיקות</h2>
+        </div>
+        <div class="card">
+          <canvas id="workFreeChart" height="220"></canvas>
+        </div>
+        <div class="card">
+          <canvas id="tasksChart" height="220"></canvas>
+        </div>
+      </section>
+
+      <section id="settingsSection" class="screen">
+        <div class="section-header">
+          <h2>הגדרות</h2>
+        </div>
+        <div class="settings-group">
+          <label>עיר:</label>
+          <input id="settingsCityInput" type="text" placeholder="לדוגמה: Jerusalem,IL" />
+          <button id="btnSaveCity" class="primary-pill">שמור עיר</button>
+          <p class="hint">העיר משפיעה על מזג אוויר, זמני שבת וזריחה/שקיעה.</p>
+        </div>
+        <div class="settings-group">
+          <label>מצב יום חופש:</label>
+          <button id="btnToggleHoliday" class="ghost-pill">סמן / הסר יום חופש עבור היום</button>
+        </div>
+        <div class="settings-group">
+          <label>התראות:</label>
+          <button id="btnRequestNotifications" class="ghost-pill">הפעל הרשאת התראות</button>
+          <p class="hint">התראות דחיפה מלאות (FCM) מסומנות כ־TODO בקוד – כרגע יש התראות לוקליות בסיסיות.</p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button data-target="calendarSection" class="nav-btn active">לוח שנה</button>
+      <button data-target="tasksSection" class="nav-btn">משימות</button>
+      <button data-target="shoppingSection" class="nav-btn">קניות</button>
+      <button data-target="statsSection" class="nav-btn">סטטיסטיקות</button>
+      <button data-target="settingsSection" class="nav-btn">הגדרות</button>
+    </nav>
+
+    <button id="btnFabAdd" class="fab-btn">+</button>
+
+    <!-- Day modal -->
+    <div id="dayModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content day-modal">
+        <div class="modal-header">
+          <div>
+            <div id="dayModalGreg" class="modal-title"></div>
+            <div id="dayModalHeb" class="modal-subtitle"></div>
+          </div>
+          <button class="icon-btn" data-close-modal>✕</button>
+        </div>
+        <div id="dayWeatherContainer" class="weather-card hidden">
+          <div class="weather-main">
+            <div id="dayWeatherEmoji" class="weather-emoji"></div>
+            <div>
+              <div id="dayWeatherTemp" class="weather-temp"></div>
+              <div id="dayWeatherDesc" class="weather-desc"></div>
+            </div>
+          </div>
+          <div id="dayWeatherExtra" class="weather-extra"></div>
+        </div>
+        <button id="btnToggleDayWeather" class="ghost-pill small">מזג אוויר</button>
+
+        <div id="dayAutoBlocks" class="auto-blocks"></div>
+
+        <div id="dayEventsContainer" class="list-container"></div>
+
+        <button id="btnAddFromDay" class="primary-pill full-width">+ אירוע / משימה</button>
+      </div>
+    </div>
+
+    <!-- Event/task editor modal -->
+    <div id="editModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title" id="editModalTitle">אירוע / משימה</div>
+          <button class="icon-btn" data-close-modal>✕</button>
+        </div>
+        <form id="editForm" class="form">
+          <div class="chip-row">
+            <label class="chip">
+              <input type="radio" name="type" value="event" checked />
+              <span>אירוע</span>
+            </label>
+            <label class="chip">
+              <input type="radio" name="type" value="task" />
+              <span>משימה</span>
+            </label>
+          </div>
+
+          <div class="chip-row">
+            <label class="chip">
+              <input type="radio" name="owner" value="binyamin" checked />
+              <span>בנימין</span>
+            </label>
+            <label class="chip">
+              <input type="radio" name="owner" value="nana" />
+              <span>ננה</span>
+            </label>
+            <label class="chip">
+              <input type="radio" name="owner" value="shared" />
+              <span>משותף</span>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>שם</span>
+            <input type="text" name="title" required />
+          </label>
+
+          <label class="field">
+            <span>תיאור</span>
+            <textarea name="description" rows="2"></textarea>
+          </label>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>תאריך</span>
+              <input type="date" name="date" />
+            </label>
+            <label class="field">
+              <span>שעת התחלה</span>
+              <input type="time" name="startTime" />
+            </label>
+          </div>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>שעת סיום</span>
+              <input type="time" name="endTime" />
+            </label>
+            <label class="field">
+              <span>משך (דקות)</span>
+              <input type="number" name="duration" min="5" max="720" step="5" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span>כתובת (ל־Waze)</span>
+            <input type="text" name="address" placeholder="לדוגמה: יפו 1, ירושלים" />
+          </label>
+          <button type="button" id="btnOpenWaze" class="ghost-pill small">פתח ב־Waze</button>
+
+          <label class="field">
+            <span>התראה (דקות לפני)</span>
+            <input type="number" name="reminderMinutes" min="1" max="180" value="10" />
+          </label>
+
+          <label class="field">
+            <span>חזרתיות</span>
+            <select name="recurring">
+              <option value="none">ללא</option>
+              <option value="daily">יומי</option>
+              <option value="weekly">שבועי</option>
+              <option value="monthly_greg">חודשי (לועזי)</option>
+              <option value="monthly_heb">חודשי (עברי)</option>
+              <option value="yearly_greg">שנתי (לועזי)</option>
+              <option value="yearly_heb">שנתי (עברי)</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>דחיפות</span>
+            <select name="urgency">
+              <option value="today">היום</option>
+              <option value="week">השבוע</option>
+              <option value="month">החודש</option>
+              <option value="none">לא דחוף</option>
+            </select>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-pill full-width">שמור</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Gihari assistant modal -->
+    <div id="gihariModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">ג'יחרי – העוזר החכם</div>
+          <button class="icon-btn" data-close-modal>✕</button>
+        </div>
+        <div id="gihariSummary" class="gihari-summary"></div>
+        <div class="gihari-actions">
+          <button id="btnGihariSuggestNow" class="primary-pill full-width">מה כדאי לעשות עכשיו?</button>
+          <button id="btnGihariPlaceTasks" class="ghost-pill full-width">מקם משימות ללא תאריך</button>
+          <button id="gihariMicBtn" class="ghost-pill full-width">🎤 דבר איתי</button>
+        </div>
+        <div id="gihariLog" class="list-container small-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
