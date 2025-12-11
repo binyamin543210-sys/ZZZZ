@@ -535,7 +535,7 @@ function renderTasks(filter = "undated") {
         none: "לא דחוף"
       };
       urgencyBadge.textContent = map[task.urgency] || task.urgency];
-    }
+    
 
     item.appendChild(header);
     item.appendChild(meta);
