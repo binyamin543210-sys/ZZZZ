@@ -18,28 +18,27 @@ import { db } from "./firebase-config.js";
 const state = {
   currentUser: "binyamin",
   currentDate: new Date(),
-
   settings: {
     city: null,
     cityLat: null,
     cityLon: null,
     cityTz: null
   },
-
   cache: {
-    events: {},
+    events: {}, // key: dateKey -> {id: event}
     tasks: {},
     shopping: {},
-    holidays: {},
+    holidays: {}, // dateKey -> holiday info
     holidaysLoadedYear: null,
     shabbat: {}
   },
-
   ui: {
     darkMode: false,
     notificationsGranted: false
   }
-};const el = (id) => document.getElementById(id);
+};
+
+const el = (id) => document.getElementById(id);
 const qs = (sel, root = document) => root.querySelector(sel);
 const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
@@ -535,7 +534,7 @@ function renderTasks(filter = "undated") {
         month: "החודש",
         none: "לא דחוף"
       };
-      urgencyBadge.textContent = map[task.urgency] || task.urgency;
+      urgencyBadge.textContent = map[task.urgency] || task.urgency];
     }
 
     item.appendChild(header);
@@ -1714,7 +1713,7 @@ function handleGihariVoiceCommand(text) {
       for (const [start, end] of freeSlots) {
         if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {
           const dk = dateKeyFromDate(d);
-      const refPath = ref(db, `events/${dk}`);
+          const refPath = ref(db, `events/${dk}`);
           const newRef = push(refPath);
           const startH = String(Math.floor(start / 60)).padStart(2, "0");
           const startM = String(start % 60).padStart(2, "0");
