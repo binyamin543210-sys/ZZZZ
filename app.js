@@ -527,7 +527,7 @@ function renderTasks(filter = "undated") {
     const urgencyBadge = document.createElement("span");
     urgencyBadge.className = "badge";
     if (task.urgency) {
-      urgencyBadge.classList.add(`badge-urgency-${task.urgency}`);
+      urgencyBadge.classList.add(`badge-urgency-${task.urgency`)};
       const map = {
         today: "היום",
         week: "השבוע",
