@@ -22,15 +22,15 @@ const state = {
     city: null,
     cityLat: null,
     cityLon: null,
-    cityTz: null
-  },
-  cache: {
+    cityTz: null,
+ 
+  cache: { 
     events: {}, // key: dateKey -> {id: event}
     tasks: {},
     shopping: {},
     holidays: {}, // dateKey -> holiday info
     holidaysLoadedYear: null,
-    shabbat: {}
+    shabbat: {},
   },
   ui: {
     darkMode: false,
