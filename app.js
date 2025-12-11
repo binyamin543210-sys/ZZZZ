@@ -534,8 +534,8 @@ function renderTasks(filter = "undated") {
         month: "החודש",
         none: "לא דחוף"
       };
-      urgencyBadge.textContent = map[task.urgency] || task.urgency];
-    
+      urgencyBadge.textContent = map[task.urgency] || task.urgency;
+    }
 
     item.appendChild(header);
     item.appendChild(meta);
