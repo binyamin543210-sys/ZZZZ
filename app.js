@@ -18,27 +18,28 @@ import { db } from "./firebase-config.js";
 const state = {
   currentUser: "binyamin",
   currentDate: new Date(),
+
   settings: {
     city: null,
     cityLat: null,
     cityLon: null,
-    cityTz: null,
- 
-  cache: { 
-    events: {}, // key: dateKey -> {id: event}
+    cityTz: null
+  },
+
+  cache: {
+    events: {},
     tasks: {},
     shopping: {},
-    holidays: {}, // dateKey -> holiday info
+    holidays: {},
     holidaysLoadedYear: null,
-    shabbat: {},
+    shabbat: {}
   },
+
   ui: {
     darkMode: false,
     notificationsGranted: false
   }
-};
-
-const el = (id) => document.getElementById(id);
+};const el = (id) => document.getElementById(id);
 const qs = (sel, root = document) => root.querySelector(sel);
 const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
