@@ -1,0 +1,22 @@
+{
+  "name": "B&N לוח שנה",
+  "short_name": "B&N",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f6fb",
+  "theme_color": "#6366f1",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
