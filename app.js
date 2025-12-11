@@ -1714,7 +1714,7 @@ function handleGihariVoiceCommand(text) {
       for (const [start, end] of freeSlots) {
         if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {
           const dk = dateKeyFromDate(d);
-       const refPath = ref(db, `events/${dk}`);
+      const refPath = ref(db, `events/${dk}`);
           const newRef = push(refPath);
           const startH = String(Math.floor(start / 60)).padStart(2, "0");
           const startM = String(start % 60).padStart(2, "0");
