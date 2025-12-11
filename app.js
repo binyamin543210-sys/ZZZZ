@@ -534,7 +534,8 @@ function renderTasks(filter = "undated") {
         month: "החודש",
         none: "לא דחוף"
       };
-      urgencyBadge.textContent = map[task.urgency] || task.urgency];
+      // תוקן - הורדתי סוגר מרובע מיותר בסוף
+      urgencyBadge.textContent = map[task.urgency] || task.urgency;
     }
 
     item.appendChild(header);
@@ -575,7 +576,6 @@ function postponeTask(task) {
   });
   remove(fromRef);
 }
-
 
 function openDayModal(date) {
   const modal = el("dayModal");
@@ -1296,10 +1296,11 @@ function gihariSuggestNow() {
   });
 
   const top = tasksUndone[0];
+  // תוקן: המרכאות/גרש בתוך ה-template string
   appendGihariLog(
     `מומלץ לעבוד עכשיו על "<strong>${top.title}</strong>" (דחיפות: ${
       top.urgency || "לא דחוף"
-    }, משך משוער: ${top.duration || 30} דק').`
+    }, משך משוער: ${top.duration || 30} דקות).`
   );
 }
 
@@ -1677,7 +1678,8 @@ function handleGihariVoiceCommand(text) {
       const dk = dateKeyFromDate(opt.date);
       const h = String(Math.floor(opt.start / 60)).padStart(2, "0");
       const m = String(opt.start % 60).padStart(2, "0");
-      msg += `${idx + 1}. ${dk} בשעה ${h}:${m}\n";
+      // תוקן: backtick במקום מרכאות
+      msg += `${idx + 1}. ${dk} בשעה ${h}:${m}\n`;
     });
     appendGihariLog(msg);
     return;
