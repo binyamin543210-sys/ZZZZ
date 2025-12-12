@@ -1168,13 +1168,10 @@ function openGihariModal() {
   const loadLabel =
     dailyLoadMinutes < 180 ? "יום קל" : dailyLoadMinutes < 360 ? "יום בינוני" : "יום עמוס";
 
-  summaryEl.innerHTML = "
-    <p>ג'יחרי בדק את היום שלך.</p>
-    <p>עומס משימות/אירועים היום: <strong>" + Math.round(
-      dailyLoadMinutes / 60
-    ) + " שעות</strong> (" + loadLabel + ").</p>
-    <p>מספר חלונות זמן פנויים משמעותיים (30+ דק'): <strong>" + freeSlots.length + "</strong>.</p>
-  ";
+  summaryEl.innerHTML =
+  "<p>עומס יומי: <strong>" + Math.round(dailyLoadMinutes / 60) + " שעות</strong></p>" +
+  "<p>זמני עומס: <strong>" + loadLabel + "</strong></p>" +
+  "<p>חלונות פנויים: <strong>" + freeSlots.length + "</strong></p>";
 
   el("gihariLog").innerHTML = "";
 
