@@ -1372,12 +1372,18 @@ function gihariPlaceUndatedTasks() {
           remove(oldRef);
         }
 
-        appendGihariLog(
-          "המשימה "<strong>" + task.title + "</strong>" שובצה ל־" + d.toLocaleDateString(
-            "he-IL"
-          ) + " בשעה " + startH + ":" + startM + "."
-        );
+     const dateText = d.toLocaleDateString("he-IL");
+const timeText = startH + ":" + startM;
 
+appendGihariLog(
+  "<strong>" +
+  task.title +
+  "</strong> שובץ " +
+  dateText +
+  " בשעה " +
+  timeText +
+  "."
+);
         placed = true;
         break;
       }
