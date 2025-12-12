@@ -14,6 +14,8 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
+
+  
   <div id="app">
     <header class="app-header">
       <div class="header-top">
@@ -304,5 +306,16 @@
       });
     }
   </script>
+  <div id="postponeModal" class="modal hidden">
+  <div class="modal-backdrop" data-close-postpone></div>
+  <div class="modal-card">
+    <h3>דחיית משימה</h3>
+    <input id="postponeDateInput" type="date" />
+    <div class="row">
+      <button id="postponeOk">אישור</button>
+      <button data-close-postpone>ביטול</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
