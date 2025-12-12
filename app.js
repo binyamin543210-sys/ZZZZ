@@ -1713,24 +1713,26 @@ function handleGihariVoiceCommand(text) {
       for (const [start, end] of freeSlots) {
         if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {
           const dk = dateKeyFromDate(d);
-          const refPath = ref(db, `events/${dk}`);
-          const newRef = push(refPath);
-          const startH = String(Math.floor(start / 60)).padStart(2, "0");
-          const startM = String(start % 60).padStart(2, "0");
-          const endMinutes = start + duration;
-          const endH = String(Math.floor(endMinutes / 60)).padStart(2, "0");
-          const endM = String(endMinutes % 60).padStart(2, "0");
-          set(newRef, {
-            type: "task",
-            title: "אימון",
-            owner: state.currentUser,
-            dateKey: dk,
-            startTime: `${startH}:${startM}`,
-            endTime: `${endH}:${endM}`,
-            duration,
-            urgency: "week",
-            _id: newRef.key
-          });
+         const refPath = ref(db, `events/${dk}`);
+const newRef = push(refPath);
+
+const startH = String(Math.floor(start / 60)).padStart(2, "0");
+const startM = String(start % 60).padStart(2, "0");
+const endMinutes = start + duration;
+const endH = String(Math.floor(endMinutes / 60)).padStart(2, "0");
+const endM = String(endMinutes % 60).padStart(2, "0");
+
+set(newRef, {
+  type: "task",
+  title: "אימון",
+  owner: state.currentUser,
+  dateKey: dk,
+  startTime: `${startH}:${startM}`,
+  endTime: `${endH}:${endM}`,
+  duration,
+  urgency: "week",
+  _id: newRef.key
+});
           created++;
           if (created >= times) break outer;
         }
