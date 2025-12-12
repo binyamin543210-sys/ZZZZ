@@ -827,7 +827,11 @@ function handleEditFormSubmit(ev) {
   } else {
     const refPath = ref(db, "events/" + dateKey + "");
     const newRef = push(refPath);
-    set(newRef, { ...eventObj, _id: newRef.key });
+  await set(newRef, { ...eventObj, _id: newRef.key });
+
+if (eventObj.recurring && eventObj.recurring !== "none") {
+  materializeRecurringTask({ ...eventObj, _id: newRef.key }, 90);
+}
   }
 
   scheduleLocalReminder(eventObj);
@@ -1798,4 +1802,56 @@ function handleGihariVoiceCommand(text) {
 // Stub – כדי שלא יהיה Error כשג'יחרי קורא לה
 function loadMonthEvents() {
   renderCalendar();
+}
+
+
+let _postponeTask = null;
+
+function openPostponeModal(task) {
+  _postponeTask = task;
+  document.getElementById("postponeModal").classList.remove("hidden");
+
+  document.querySelectorAll("[data-close-postpone]").forEach(b =>
+    b.onclick = () =>
+      document.getElementById("postponeModal").classList.add("hidden")
+  );
+
+  document.getElementById("postponeOk").onclick = () => {
+    const v = document.getElementById("postponeDateInput").value;
+    if (!v) return;
+    moveTaskToDate(_postponeTask, v);
+    document.getElementById("postponeModal").classList.add("hidden");
+  };
+}
+
+async function moveTaskToDate(task, newDateKey) {
+  const id = task._id || task.id;
+  if (!id) return;
+
+  await set(ref(db, `events/${newDateKey}/${id}`), {
+    ...task,
+    dateKey: newDateKey
+  });
+
+  await remove(ref(db, `events/${task.dateKey}/${id}`));
+}
+async function materializeRecurringTask(task, daysAhead) {
+  const start = new Date(task.dateKey);
+
+  for (let i = 1; i <= daysAhead; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+
+    if (task.recurring === "weekly" && d.getDay() !== start.getDay()) continue;
+    if (task.recurring === "monthly" && d.getDate() !== start.getDate()) continue;
+
+    const dk = d.toISOString().split("T")[0];
+    const id = `${task._id}_${dk}`;
+
+    await set(ref(db, `events/${dk}/${id}`), {
+      ...task,
+      _id: id,
+      dateKey: dk
+    });
+  }
 }
