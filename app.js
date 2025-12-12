@@ -652,9 +652,11 @@ function renderDayEvents(dateKey) {
     const meta = document.createElement("div");
     meta.className = "task-meta";
     const parts = [];
-    if (ev.startTime) {
-      parts.push("" + ev.startTime + "${ev.endTime ? "–${ev.endTime}" : ""}");
-    }
+   if (ev.startTime) {
+  let timeText = ev.startTime;
+  if (ev.endTime) timeText += " - " + ev.endTime;
+  parts.push(timeText);
+}
     if (ev.duration) parts.push("" + ev.duration + " דק'");
     if (ev.type === "task") parts.push("משימה");
     else parts.push("אירוע");
