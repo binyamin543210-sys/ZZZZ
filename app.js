@@ -1295,11 +1295,18 @@ function gihariSuggestNow() {
   });
 
   const top = tasksUndone[0];
-  appendGihariLog(
-    "מומלץ לעבוד עכשיו על "<strong>" + top.title + "</strong>" (דחיפות: " + 
-      top.urgency || "לא דחוף"
-     + ", משך משוער: " + top.duration || 30 + " דק')."
-  );
+const urgencyText = top.urgency ? top.urgency : "אין";
+const durationText = (top.duration != null ? top.duration : 30) + " דק";
+
+appendGihariLog(
+  "<p>משימה הבאה: <strong>" +
+  top.title +
+  "</strong> (דחיפות: " +
+  urgencyText +
+  ", משך: " +
+  durationText +
+  ").</p>"
+);
 }
 
 function gihariPlaceUndatedTasks() {
