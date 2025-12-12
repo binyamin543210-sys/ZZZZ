@@ -1345,9 +1345,10 @@ function gihariPlaceUndatedTasks() {
       const { freeSlots } = computeLoadAndFreeSlots(d);
       const duration = task.duration || 30;
 
-      const suitableSlot = freeSlots.find(
+const suitableSlot = freeSlots.find(
         ([start, end]) => end - start >= duration && start >= 8 * 60 && end <= 22 * 60
       );
+
       if (suitableSlot) {
         const startMinutes = suitableSlot[0];
         const startH = String(Math.floor(startMinutes / 60)).padStart(2, "0");
@@ -1357,33 +1358,39 @@ function gihariPlaceUndatedTasks() {
         const endM = String(endMinutes % 60).padStart(2, "0");
 
         const dk = dateKeyFromDate(d);
-        const refPath = ref(db, "events/" + dk + "");
+        const refPath = ref(db, "events/" + dk);
         const newRef = push(refPath);
+
         set(newRef, {
           ...task,
           dateKey: dk,
-          startTime: "" + startH + ":" + startM + "",
-          endTime: "" + endH + ":" + endM + "",
+          startTime: startH + ":" + startM,
+          endTime: endH + ":" + endM,
           _id: newRef.key
         });
 
+        // מוחק את המשימה הישנה אם היא לא הייתה "ללא תאריך"
         if (task.dateKey && task.dateKey !== "undated") {
-          const oldRef = ref(db, "events/" + task.dateKey + "/" + task.id + "");
-          remove(oldRef);
+          const oldId = task._id || task.id;
+          if (oldId) {
+            const oldRef = ref(db, "events/" + task.dateKey + "/" + oldId);
+            remove(oldRef);
+          }
         }
 
-     const dateText = d.toLocaleDateString("he-IL");
-const timeText = startH + ":" + startM;
+        const dateText = d.toLocaleDateString("he-IL");
+        const timeText = startH + ":" + startM;
 
-appendGihariLog(
-  "<strong>" +
-  task.title +
-  "</strong> שובץ " +
-  dateText +
-  " בשעה " +
-  timeText +
-  "."
-);
+        appendGihariLog(
+          "<strong>" +
+            task.title +
+            "</strong> שובץ " +
+            dateText +
+            " בשעה " +
+            timeText +
+            "."
+        );
+
         placed = true;
         break;
       }
@@ -1391,7 +1398,9 @@ appendGihariLog(
 
     if (!placed) {
       appendGihariLog(
-        "לא נמצא חלון זמן מתאים למשימה "<strong>" + task.title + "</strong>" בשבוע–שבועיים הקרובים."
+        "לא נמצא חלון זמן מתאים למשימה <strong>" +
+          task.title +
+          "</strong> בשבוע-שבועיים הקרובים."
       );
     }
   });
@@ -1536,7 +1545,7 @@ function parseCommandHour(text) {
 
 function createEventFromGihari(text) {
   const targetDate = parseCommandTargetDate(text);
-  const hour = parseCommandHour(text) ?? 17;
+  const hour = (parseCommandHour(text) != null ? parseCommandHour(text) : 17);
   const startH = String(hour).padStart(2, "0");
   const startM = "00";
   const endHour = Math.min(hour + 2, 23);
@@ -1558,16 +1567,17 @@ function createEventFromGihari(text) {
   }
 
   const dk = dateKeyFromDate(targetDate);
-  const refPath = ref(db, "events/" + dk + "");
+  const refPath = ref(db, "events/" + dk);
   const newRef = push(refPath);
+
   set(newRef, {
     type: "event",
     owner: state.currentUser,
     title,
     description: "",
     dateKey: dk,
-    startTime: "" + startH + ":" + startM + "",
-    endTime: "" + endH + ":" + startM + "",
+    startTime: startH + ":" + startM,
+    endTime: endH + ":" + startM,
     duration: (endHour - hour) * 60,
     address,
     urgency: "none",
@@ -1576,7 +1586,15 @@ function createEventFromGihari(text) {
   });
 
   appendGihariLog(
-    "קבעתי לך אירוע "<strong>" + title + "</strong>" ב־" + dk + " בשעה " + startH + ":" + startM + "."
+    "קבעתי לך אירוע <strong>" +
+      title +
+      "</strong> ב-" +
+      dk +
+      " בשעה " +
+      startH +
+      ":" +
+      startM +
+      "."
   );
 }
 
@@ -1665,13 +1683,16 @@ function handleGihariVoiceCommand(text) {
       if (map[word] != null) hours = map[word];
       else if (!isNaN(parseFloat(word))) hours = parseFloat(word);
     }
+
     const duration = Math.round(hours * 60);
     const today = new Date();
     const suggestions = [];
+
     for (let offset = 0; offset <= 14; offset++) {
       const d = new Date(today);
       d.setDate(d.getDate() + offset);
       const { freeSlots } = computeLoadAndFreeSlots(d);
+
       for (const [start, end] of freeSlots) {
         if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {
           suggestions.push({ date: new Date(d), start });
@@ -1680,17 +1701,20 @@ function handleGihariVoiceCommand(text) {
       }
       if (suggestions.length >= 3) break;
     }
+
     if (!suggestions.length) {
       appendGihariLog("לא מצאתי חלונות זמן מתאימים בשבועיים הקרובים.");
       return;
     }
-    let msg = "מצאתי אפשרויות זמן עבורך:\n";
+
+    let msg = "מצאתי אפשרויות זמן עבורך:<br>";
     suggestions.forEach((opt, idx) => {
       const dk = dateKeyFromDate(opt.date);
       const h = String(Math.floor(opt.start / 60)).padStart(2, "0");
       const m = String(opt.start % 60).padStart(2, "0");
-      msg += "" + idx + 1 + ". " + dk + " בשעה " + h + ":" + m + "\n";
+      msg += (idx + 1) + ". " + dk + " בשעה " + h + ":" + m + "<br>";
     });
+
     appendGihariLog(msg);
     return;
   }
@@ -1698,6 +1722,7 @@ function handleGihariVoiceCommand(text) {
   // "אני צריך להתאמן שלוש פעמים השבוע ... כל אימון שלוש שעות"
   if (text.includes("להתאמן") && text.includes("פעמים") && text.includes("שבוע")) {
     let times = 3;
+
     const timesMatch = text.match(/([א-ת0-9]+)\s*פעמים/);
     if (timesMatch) {
       const word = timesMatch[1];
@@ -1714,44 +1739,51 @@ function handleGihariVoiceCommand(text) {
       if (map[word] != null) hours = map[word];
       else if (!isNaN(parseFloat(word))) hours = parseFloat(word);
     }
+
     const duration = Math.round(hours * 60);
 
     const today = new Date();
     let created = 0;
+
     outer: for (let offset = 0; offset <= 7; offset++) {
       const d = new Date(today);
       d.setDate(d.getDate() + offset);
       const { freeSlots } = computeLoadAndFreeSlots(d);
+
       for (const [start, end] of freeSlots) {
         if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {
           const dk = dateKeyFromDate(d);
-          const refPath = ref(db, "events/${dk}");
+          const refPath = ref(db, "events/" + dk);
           const newRef = push(refPath);
+
           const startH = String(Math.floor(start / 60)).padStart(2, "0");
           const startM = String(start % 60).padStart(2, "0");
           const endMinutes = start + duration;
           const endH = String(Math.floor(endMinutes / 60)).padStart(2, "0");
           const endM = String(endMinutes % 60).padStart(2, "0");
+
           set(newRef, {
             type: "task",
             title: "אימון",
             owner: state.currentUser,
             dateKey: dk,
-            startTime: "${startH}:${startM}",
-            endTime: "${endH}:${endM}",
+            startTime: startH + ":" + startM,
+            endTime: endH + ":" + endM,
             duration,
             urgency: "week",
             _id: newRef.key
           });
+
           created++;
           if (created >= times) break outer;
         }
       }
     }
+
     if (created === 0) {
       appendGihariLog("לא הצלחתי למצוא זמן פנוי לאימונים השבוע.");
     } else {
-      appendGihariLog("קבעתי ${created} אימונים בשבוע הקרוב.`);
+      appendGihariLog("קבעתי " + created + " אימונים בשבוע הקרוב.");
       loadMonthEvents();
     }
     return;
