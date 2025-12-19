@@ -7,15 +7,16 @@
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#ffffff" />
   <link rel="stylesheet" href="styles.css" />
+
   <!-- ספריות גלובליות -->
   <script defer src="https://cdn.jsdelivr.net/npm/hebcal@2.0.2/dist/hebcal.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- קוד האפליקציה כמודול (מייבא firebase-config.js) -->
+
+  <!-- קוד האפליקציה -->
   <script type="module" src="app.js"></script>
 </head>
 <body>
 
-  
   <div id="app">
     <header class="app-header">
       <div class="header-top">
@@ -23,6 +24,7 @@
         <div class="app-title">BNAPP V3.5</div>
         <button id="btnGihari" class="primary-pill">ג'יחרי</button>
       </div>
+
       <div class="header-bottom">
         <button id="btnPrevMonth" class="icon-btn">‹</button>
         <div class="month-label">
@@ -31,6 +33,7 @@
         </div>
         <button id="btnNextMonth" class="icon-btn">›</button>
       </div>
+
       <div class="header-row">
         <select id="userSelect" class="pill-select">
           <option value="binyamin">בנימין</option>
@@ -96,37 +99,40 @@
         <div class="section-header">
           <h2>הגדרות</h2>
         </div>
-        
+
         <div class="settings-group">
           <label>רקע:</label>
-          <div class="bg-picker">
-            <button type="button" class="bg-dot" data-bg="1"></button>
-            <button type="button" class="bg-dot" data-bg="2"></button>
-            <button type="button" class="bg-dot" data-bg="3"></button>
-            <button type="button" class="bg-dot" data-bg="4"></button>
-            <button type="button" class="bg-dot" data-bg="5"></button>
-            <button type="button" class="bg-dot" data-bg="6"></button>
-            <button type="button" class="bg-dot" data-bg="7"></button>
-            <button type="button" class="bg-dot" data-bg="8"></button>
-            <button type="button" class="bg-dot" data-bg="9"></button>
-            <button type="button" class="bg-dot" data-bg="10"></button>
+          <div class="bg-picker" id="bgPicker">
+            <button type="button" class="bg-dot" data-bg="1" aria-label="רקע 1"></button>
+            <button type="button" class="bg-dot" data-bg="2" aria-label="רקע 2"></button>
+            <button type="button" class="bg-dot" data-bg="3" aria-label="רקע 3"></button>
+            <button type="button" class="bg-dot" data-bg="4" aria-label="רקע 4"></button>
+            <button type="button" class="bg-dot" data-bg="5" aria-label="רקע 5"></button>
+            <button type="button" class="bg-dot" data-bg="6" aria-label="רקע 6"></button>
+            <button type="button" class="bg-dot" data-bg="7" aria-label="רקע 7"></button>
+            <button type="button" class="bg-dot" data-bg="8" aria-label="רקע 8"></button>
+            <button type="button" class="bg-dot" data-bg="9" aria-label="רקע 9"></button>
+            <button type="button" class="bg-dot" data-bg="10" aria-label="רקע 10"></button>
           </div>
           <p class="hint">בחר רקע מועדף – נשמר בכל מכשיר בנפרד.</p>
         </div>
-<div class="settings-group">
+
+        <div class="settings-group">
           <label>עיר:</label>
           <input id="settingsCityInput" type="text" placeholder="לדוגמה: Jerusalem,IL" />
           <button id="btnSaveCity" class="primary-pill">שמור עיר</button>
           <p class="hint">העיר משפיעה על מזג אוויר, זמני שבת וזריחה/שקיעה.</p>
         </div>
+
         <div class="settings-group">
           <label>מצב יום חופש:</label>
           <button id="btnToggleHoliday" class="ghost-pill">סמן / הסר יום חופש עבור היום</button>
         </div>
+
         <div class="settings-group">
           <label>התראות:</label>
           <button id="btnRequestNotifications" class="ghost-pill">הפעל הרשאת התראות</button>
-          <p class="hint">התראות דחיפה מלאות (FCM) מסומנות כ־TODO בקוד – כרגע יש התראות לוקליות בסיסיות.</p>
+          <p class="hint">כרגע יש התראות לוקליות בסיסיות.</p>
         </div>
       </section>
     </main>
@@ -143,7 +149,7 @@
 
     <!-- Day modal -->
     <div id="dayModal" class="modal hidden">
-      <div class="modal-backdrop"></div>
+      <div class="modal-backdrop" data-close-modal></div>
       <div class="modal-content day-modal">
         <div class="modal-header">
           <div>
@@ -152,9 +158,10 @@
           </div>
           <button class="icon-btn" data-close-modal>✕</button>
         </div>
+
         <div id="dayWeatherContainer" class="weather-card hidden">
           <div class="weather-main">
-            <div id="dayWeatherEmoji" class="weather-emoji"></div>
+            <div id="dayWeatherEmoji" class="weather-emoji">⛅</div>
             <div>
               <div id="dayWeatherTemp" class="weather-temp"></div>
               <div id="dayWeatherDesc" class="weather-desc"></div>
@@ -165,7 +172,6 @@
         <button id="btnToggleDayWeather" class="ghost-pill small">מזג אוויר</button>
 
         <div id="dayAutoBlocks" class="auto-blocks"></div>
-
         <div id="dayEventsContainer" class="list-container"></div>
 
         <button id="btnAddFromDay" class="primary-pill full-width">+ אירוע / משימה</button>
@@ -174,12 +180,13 @@
 
     <!-- Event/task editor modal -->
     <div id="editModal" class="modal hidden">
-      <div class="modal-backdrop"></div>
+      <div class="modal-backdrop" data-close-modal></div>
       <div class="modal-content">
         <div class="modal-header">
           <div class="modal-title" id="editModalTitle">אירוע / משימה</div>
           <button class="icon-btn" data-close-modal>✕</button>
         </div>
+
         <form id="editForm" class="form">
           <div class="chip-row">
             <label class="chip">
@@ -282,7 +289,7 @@
 
     <!-- Gihari assistant modal -->
     <div id="gihariModal" class="modal hidden">
-      <div class="modal-backdrop"></div>
+      <div class="modal-backdrop" data-close-modal></div>
       <div class="modal-content">
         <div class="modal-header">
           <div class="modal-title">ג'יחרי – העוזר החכם</div>
@@ -297,6 +304,26 @@
         <div id="gihariLog" class="list-container small-text"></div>
       </div>
     </div>
+
+    <!-- Postpone modal (קיים בקוד שלך) -->
+    <div id="postponeModal" class="modal hidden">
+      <div class="modal-backdrop" data-close-postpone></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">דחיית משימה</div>
+          <button class="icon-btn" data-close-postpone>✕</button>
+        </div>
+        <label class="field">
+          <span>בחר תאריך חדש</span>
+          <input id="postponeDateInput" type="date" />
+        </label>
+        <div class="task-actions">
+          <button id="postponeOk" class="primary-pill full-width">אישור</button>
+          <button class="ghost-pill full-width" data-close-postpone>ביטול</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -306,16 +333,5 @@
       });
     }
   </script>
-  <div id="postponeModal" class="modal hidden">
-  <div class="modal-backdrop" data-close-postpone></div>
-  <div class="modal-card">
-    <h3>דחיית משימה</h3>
-    <input id="postponeDateInput" type="date" />
-    <div class="row">
-      <button id="postponeOk">אישור</button>
-      <button data-close-postpone>ביטול</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
