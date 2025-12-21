@@ -1954,5 +1954,5 @@ await set(ref(db, `events/${dk}/${id}`), {
 });
 
   }
-}}
+}
 
