@@ -786,3 +786,24 @@ body[data-bg="9"] #app {
 body[data-bg="10"] #app {
   background: radial-gradient(circle at top, rgba(253,186,116,0.28), #fdf2e9);
 }
+
+.toast {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  z-index: 9999;
+  opacity: 0.95;
+}
+
+.toast.hidden {
+  display: none;
+}
+
+
+
