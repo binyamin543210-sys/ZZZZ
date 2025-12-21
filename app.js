@@ -185,8 +185,9 @@ const data = await resp.json();
 const itemCandles = (data.items || []).find((it) => it.category === "candles");
 const itemHavdalah = (data.items || []).find((it) => it.category === "havdalah");
 const result = {
-candle: itemCandles ? new Date(itemCandles.date) : null,
-havdalah: itemHavdalah ? new Date(itemHavdalah.date) : null
+candle: itemCandles ? new Date(itemCandles.date + "Z") : null,
+havdalah: itemHavdalah ? new Date(itemHavdalah.date + "Z") : null
+
 };
 state.cache.shabbat[fridayKey] = result;
 return result;
@@ -463,7 +464,10 @@ const hasDate = !!task.dateKey && task.dateKey !== "undated";
 const isRecurring = task.recurring && task.recurring !== "none";
 if (filter === "undated") return !hasDate;
 if (filter === "dated") return hasDate && !isRecurring;
-if (filter === "recurring") return isRecurring;
+if (filter === "recurring") {
+  return task.recurring && task.isRecurringParent;
+}
+
 return true;
 });
 
@@ -852,8 +856,20 @@ const newRef = push(refPath);
 await set(newRef, { ...eventObj, _id: newRef.key });
 
 if (eventObj.recurring && eventObj.recurring !== "none") {
-materializeRecurringTask({ ...eventObj, _id: newRef.key }, 90);
+  const parentTask = {
+    ...eventObj,
+    _id: newRef.key,
+    parentId: null,
+    isRecurringParent: true
+  };
+
+  // עדכון האב
+  await update(newRef, parentTask);
+
+  // יצירת מופעים
+  materializeRecurringTask(parentTask, 90);
 }
+
 }
 
 scheduleLocalReminder(eventObj);
@@ -1894,7 +1910,8 @@ async function moveTaskToDate(task, newDateKey) {
 // ===============================
 async function materializeRecurringTask(task, daysAhead) {
   // אם dateKey אצלך בפורמט YYYY-MM-DD זה יעבוד; אחרת צריך התאמה
-  const start = new Date(task.dateKey);
+  const start = parseDateKey(task.dateKey);
+
   if (isNaN(start.getTime())) return;
 
   for (let i = 1; i <= daysAhead; i++) {
@@ -1908,10 +1925,13 @@ const dk = dateKeyFromDate(d);
 
     const id = `${task._id}_${dk}`;
 
-    await set(ref(db, `events/${dk}/${id}`), {
-      ...task,
-      _id: id,
-      dateKey: dk
-    });
+await set(ref(db, `events/${dk}/${id}`), {
+  ...task,
+  _id: id,
+  dateKey: dk,
+  parentId: task._id,
+  isRecurringParent: false
+});
+
   }
 }
