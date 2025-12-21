@@ -701,36 +701,34 @@ if (ev.address) {
 } else {  
   wazeBtn.disabled = true;  
 }  
+const actions = document.createElement("div");
+actions.className = "task-actions";
 
-const actions = document.createElement("div");  
-actions.className = "task-actions";  
+const editBtn = document.createElement("button");
+editBtn.className = "ghost-pill small";
+editBtn.textContent = "עריכה";
+editBtn.onclick = () => openEditModal({ dateKey, id: ev.id || ev._id });
 
-const editBtn = document.createElement("button");  
-editBtn.className = "ghost-pill small";  
-editBtn.textContent = "עריכה";  
-editBtn.onclick = () => openEditModal({ dateKey, id: ev.id || ev._id });  
+const delBtn = document.createElement("button");
+delBtn.className = "ghost-pill small";
+delBtn.textContent = "מחיקה";
+delBtn.onclick = () => {
+  deleteTaskSmart({
+    ...ev,
+    dateKey
+  });
+};
 
-const delBtn = document.createElement("button");  
-delBtn.className = "ghost-pill small";  
-delBtn.textContent = "מחיקה";  
-delBtn.onclick = () => {  
-  const refPath = ref(db, "events/" + dateKey + "/" + ev.id || ev._id + "");  
-  remove(refPath);  
-};  
+actions.appendChild(editBtn);
+actions.appendChild(delBtn);
+actions.appendChild(wazeBtn);
 
-actions.appendChild(editBtn);  
-actions.appendChild(delBtn);  
-actions.appendChild(wazeBtn);  
-
-card.appendChild(header);  
-card.appendChild(meta);  
-if (ev.description) card.appendChild(desc);  
-card.appendChild(actions);  
+card.appendChild(header);
+card.appendChild(meta);
+if (ev.description) card.appendChild(desc);
+card.appendChild(actions);
 
 container.appendChild(card);
-
-});
-}
 
 function renderAutoBlocks(date) {
 const container = el("dayAutoBlocks");
@@ -1904,6 +1902,28 @@ async function moveTaskToDate(task, newDateKey) {
   await remove(ref(db, `events/${task.dateKey}/${id}`));
 }
 
+async function deleteTaskSmart(task) {
+  const id = task._id || task.id;
+  if (!id) return;
+
+  // אם זו משימה חוזרת – אב
+  if (task.isRecurringParent) {
+    // מוחק את האב
+    await remove(ref(db, `events/${task.dateKey}/${id}`));
+
+    // מוחק את כל המופעים
+    Object.entries(state.cache.events).forEach(([dk, items]) => {
+      Object.entries(items).forEach(([cid, ev]) => {
+        if (ev.parentId === id) {
+          remove(ref(db, `events/${dk}/${cid}`));
+        }
+      });
+    });
+  } else {
+    // מחיקה רגילה – רק יום ספציפי
+    await remove(ref(db, `events/${task.dateKey}/${id}`));
+  }
+}
 
 // ===============================
 // Recurring materializer
