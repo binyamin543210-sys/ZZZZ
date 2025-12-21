@@ -1065,6 +1065,8 @@ deleteBtn.textContent = "🗑";
 deleteBtn.onclick = () => {  
   const refPath = ref(db, "shopping/" + listKey + "/" + id + "");  
   remove(refPath);  
+  showToast();
+
 };  
 
 li.appendChild(label);  
@@ -1937,6 +1939,16 @@ async function deleteTaskSmart(task) {
 // Recurring materializer
 // ===============================
 async function materializeRecurringTask(task) {
+
+function showToast(text = "משימה נמחקה") {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = text;
+  t.classList.remove("hidden");
+  setTimeout(() => t.classList.add("hidden"), 500);
+}
+
+  
   const start = new Date(task.dateKey);
   const year = start.getFullYear();
 
