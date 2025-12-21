@@ -1705,7 +1705,7 @@ function handleGihariVoiceCommand(text) {
 // יצירת אירוע אמיתי – לדוגמה: "בעוד שבוע ביום שני בשעה חמש אחר הצהריים תוסיף לי הופעה של פאר טסי בקיסריה"
 if (text.includes("תוסיף לי")) {
 createEventFromGihari(text);
-return;
+
 }
 
 // "מתי יש לי זמן ..." עם משך מסוים
