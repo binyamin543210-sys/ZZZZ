@@ -297,7 +297,8 @@ ensureYearHolidays(year);
 
 const firstDayOfMonth = new Date(year, month, 1);
 // תיקון הסטייה – תחילת שבוע באותו מקום כמו בגרסה שעבדה לך
-const startDay = (firstDayOfMonth.getDay() + 1) % 7;
+const startDay = firstDayOfMonth.getDay();
+
 const daysInMonth = new Date(year, month + 1, 0).getDate();
 
 let gregLabel = firstDayOfMonth.toLocaleDateString("he-IL", {
