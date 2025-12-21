@@ -1673,6 +1673,7 @@ targetDate.setDate(targetDate.getDate() + 1);
 targetDate.setDate(targetDate.getDate() + 7);
 } else {
 const m = text.match(/ל([0-9]{1,2})./-./-/);
+}
 if (m) {
 const d = parseInt(m[1], 10);
 const mo = parseInt(m[2], 10) - 1;
