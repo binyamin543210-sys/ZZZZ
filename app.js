@@ -828,7 +828,7 @@ function handleEditFormSubmit(ev) {
     const refPath = ref(db, "events/" + dateKey + "");
     const newRef = push(refPath);
   await set(newRef, { ...eventObj, _id: newRef.key });
-
+  }
 if (eventObj.recurring && eventObj.recurring !== "none") {
   materializeRecurringTask({ ...eventObj, _id: newRef.key }, 90);
 }
