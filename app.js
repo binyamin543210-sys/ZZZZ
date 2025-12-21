@@ -1739,7 +1739,7 @@ for (let offset = 0; offset <= 14; offset++) {
 
 if (!suggestions.length) {  
   appendGihariLog("לא מצאתי חלונות זמן מתאימים בשבועיים הקרובים.");  
-  return;  
+  
 }  
 
 let msg = "מצאתי אפשרויות זמן עבורך:<br>";  
