@@ -728,7 +728,12 @@ card.appendChild(meta);
 if (ev.description) card.appendChild(desc);
 card.appendChild(actions);
 
+
 container.appendChild(card);
+});
+
+} // ← סוף renderDayEvents
+
 
 function renderAutoBlocks(date) {
 const container = el("dayAutoBlocks");
