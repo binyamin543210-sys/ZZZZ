@@ -464,9 +464,8 @@ const hasDate = !!task.dateKey && task.dateKey !== "undated";
 const isRecurring = task.recurring && task.recurring !== "none";
 if (filter === "undated") return !hasDate;
 if (filter === "dated") return hasDate && !isRecurring;
-if (filter === "recurring") {
-  return task.recurring && task.isRecurringParent;
-}
+if (filter === "recurring") return task.isRecurringParent === true;
+
 
 return true;
 });
@@ -521,6 +520,15 @@ meta.textContent = parts.join(" • ");
 const actions = document.createElement("div");  
 actions.className = "task-actions";  
 
+if (filter === "recurring") {
+  const delAllBtn = document.createElement("button");
+  delAllBtn.className = "ghost-pill small";
+  delAllBtn.textContent = "🗑 מחק הכל";
+  delAllBtn.onclick = () => deleteTaskSmart(task);
+  actions.appendChild(delAllBtn);
+}
+
+  
 const doneBtn = document.createElement("button");  
 doneBtn.className = "ghost-pill small";  
 doneBtn.textContent = "✔ בוצע";  
@@ -1928,26 +1936,26 @@ async function deleteTaskSmart(task) {
 // ===============================
 // Recurring materializer
 // ===============================
-async function materializeRecurringTask(task, daysAhead) {
-  const start = parseDateKey(task.dateKey);
-  if (isNaN(start.getTime())) return;
+async function materializeRecurringTask(task) {
+  const start = new Date(task.dateKey);
+  const year = start.getFullYear();
 
-  for (let i = 1; i <= daysAhead; i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
+  for (let d = new Date(year, 0, 1); d.getFullYear() === year; d.setDate(d.getDate() + 1)) {
+    const dk = dateKeyFromDate(d);
 
     if (task.recurring === "weekly" && d.getDay() !== start.getDay()) continue;
-    if (task.recurring === "monthly" && d.getDate() !== start.getDate()) continue;
+    if (task.recurring === "monthly_greg" && d.getDate() !== start.getDate()) continue;
+    if (task.recurring === "yearly_greg" &&
+        (d.getDate() !== start.getDate() || d.getMonth() !== start.getMonth())) continue;
 
-    const dk = dateKeyFromDate(d);
     const id = `${task._id}_${dk}`;
 
     await set(ref(db, `events/${dk}/${id}`), {
       ...task,
       _id: id,
-      dateKey: dk,
       parentId: task._id,
-      isRecurringParent: false
+      isRecurringInstance: true,
+      dateKey: dk
     });
   }
 }
