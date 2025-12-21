@@ -522,7 +522,8 @@ doneBtn.addEventListener("click", () => markTaskDone(task));
 const postponeBtn = document.createElement("button");  
 postponeBtn.className = "ghost-pill small";  
 postponeBtn.textContent = "דחיה";  
-postponeBtn.addEventListener("click", () => postponeTask(task));  
+postponeBtn.addEventListener("click", () => openPostponeModal(task));
+
 
 actions.appendChild(doneBtn);  
 actions.appendChild(postponeBtn);  
