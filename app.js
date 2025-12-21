@@ -1872,14 +1872,14 @@ function loadMonthEvents() {
 // Postpone modal helpers
 // ===============================
 let _postponeTask = null;
-
 function openPostponeModal(task) {
   _postponeTask = task;
   document.getElementById("postponeModal").classList.remove("hidden");
 
-  document.querySelectorAll("[data-close-postpone]").forEach((b) =>
-    (b.onclick = () => document.getElementById("postponeModal").classList.add("hidden"))
-  );
+  document.querySelectorAll("[data-close-postpone]").forEach((b) => {
+    b.onclick = () =>
+      document.getElementById("postponeModal").classList.add("hidden");
+  });
 
   document.getElementById("postponeOk").onclick = () => {
     const v = document.getElementById("postponeDateInput").value;
@@ -1893,7 +1893,6 @@ async function moveTaskToDate(task, newDateKey) {
   const id = task._id || task.id;
   if (!id) return;
 
-  // ✅ תיקון: חייב backticks + מחרוזות נתיב תקינות
   await set(ref(db, `events/${newDateKey}/${id}`), {
     ...task,
     dateKey: newDateKey
@@ -1906,12 +1905,9 @@ async function deleteTaskSmart(task) {
   const id = task._id || task.id;
   if (!id) return;
 
-  // אם זו משימה חוזרת – אב
   if (task.isRecurringParent) {
-    // מוחק את האב
     await remove(ref(db, `events/${task.dateKey}/${id}`));
 
-    // מוחק את כל המופעים
     Object.entries(state.cache.events).forEach(([dk, items]) => {
       Object.entries(items).forEach(([cid, ev]) => {
         if (ev.parentId === id) {
@@ -1920,7 +1916,6 @@ async function deleteTaskSmart(task) {
       });
     });
   } else {
-    // מחיקה רגילה – רק יום ספציפי
     await remove(ref(db, `events/${task.dateKey}/${id}`));
   }
 }
@@ -1929,9 +1924,7 @@ async function deleteTaskSmart(task) {
 // Recurring materializer
 // ===============================
 async function materializeRecurringTask(task, daysAhead) {
-  // אם dateKey אצלך בפורמט YYYY-MM-DD זה יעבוד; אחרת צריך התאמה
   const start = parseDateKey(task.dateKey);
-
   if (isNaN(start.getTime())) return;
 
   for (let i = 1; i <= daysAhead; i++) {
@@ -1941,18 +1934,15 @@ async function materializeRecurringTask(task, daysAhead) {
     if (task.recurring === "weekly" && d.getDay() !== start.getDay()) continue;
     if (task.recurring === "monthly" && d.getDate() !== start.getDate()) continue;
 
-const dk = dateKeyFromDate(d);
-
+    const dk = dateKeyFromDate(d);
     const id = `${task._id}_${dk}`;
 
-await set(ref(db, `events/${dk}/${id}`), {
-  ...task,
-  _id: id,
-  dateKey: dk,
-  parentId: task._id,
-  isRecurringParent: false
-});
-
+    await set(ref(db, `events/${dk}/${id}`), {
+      ...task,
+      _id: id,
+      dateKey: dk,
+      parentId: task._id,
+      isRecurringParent: false
+    });
   }
 }
-
