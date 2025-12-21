@@ -1657,41 +1657,37 @@ renderShoppingList();
 
 document.addEventListener("DOMContentLoaded", initApp);
 
-function handleGihariVoiceCommand(text) {
+// ===============================
+// Gihari - Voice Command Handler
+// ===============================
+async function handleGihariVoiceCommand(text) {
   logGihariCommand(text);
 
-  // טיפול בפקודות תאריך: היום / מחר / מחרתיים / שבוע הבא / תאריך מפורש
+  // 1) פקודות תאריך: היום / מחר / מחרתיים / שבוע הבא / תאריך מפורש
   if (
     text.includes("היום") ||
     text.includes("מחר") ||
     text.includes("מחרתיים") ||
-    text.includes("שבוע הבא")
+    text.includes("שבוע הבא") ||
+    /([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2,4})/.test(text)
   ) {
     let targetDate = new Date(state.currentDate);
 
     if (text.includes("מחרתיים")) {
       targetDate.setDate(targetDate.getDate() + 2);
-
     } else if (text.includes("מחר")) {
       targetDate.setDate(targetDate.getDate() + 1);
-
     } else if (text.includes("שבוע הבא")) {
       targetDate.setDate(targetDate.getDate() + 7);
+    }
 
-    } else {
-      // ניסיון חילוץ תאריך מפורש: dd/mm/yy או dd/mm/yyyy
-      const m = text.match(/([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2,4})/);
-
-      if (m) {
-        const d = parseInt(m[1], 10);
-        const mo = parseInt(m[2], 10) - 1;
-        const y =
-          m[3].length === 2
-            ? 2000 + parseInt(m[3], 10)
-            : parseInt(m[3], 10);
-
-        targetDate = new Date(y, mo, d);
-      }
+    // תאריך מפורש dd/mm/yy או dd/mm/yyyy
+    const m = text.match(/([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2,4})/);
+    if (m) {
+      const d = parseInt(m[1], 10);
+      const mo = parseInt(m[2], 10) - 1;
+      const y = m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10);
+      targetDate = new Date(y, mo, d);
     }
 
     const dk = dateKeyFromDate(targetDate);
@@ -1700,191 +1696,205 @@ function handleGihariVoiceCommand(text) {
     return;
   }
 
-  // אם לא זוהתה פקודת תאריך – ממשיכים ללוגיקות אחרות
+  // 2) יצירת אירוע אמיתי – "תוסיף לי ..."
+  if (text.includes("תוסיף לי")) {
+    // מניח שקיימת אצלך הפונקציה הזו
+    createEventFromGihari(text);
+    return;
+  }
+
+  // 3) "מתי יש לי זמן ..." עם משך
+  if (text.includes("מתי יש לי זמן")) {
+    let hours = 1;
+
+    const hMatch = text.match(/([א-ת0-9.]+)\s*שעה/);
+    if (hMatch) {
+      const word = hMatch[1];
+      const map = { "חצי": 0.5, "שעה": 1, "שעתיים": 2, "שתיים": 2, "שלוש": 3, "ארבע": 4 };
+      if (map[word] != null) hours = map[word];
+      else if (!isNaN(parseFloat(word))) hours = parseFloat(word);
+    }
+
+    const duration = Math.round(hours * 60);
+    const today = new Date();
+    const suggestions = [];
+
+    for (let offset = 0; offset <= 14; offset++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + offset);
+
+      const { freeSlots } = computeLoadAndFreeSlots(d);
+
+      for (const [start, end] of freeSlots) {
+        if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {
+          suggestions.push({ date: new Date(d), start });
+          if (suggestions.length >= 3) break;
+        }
+      }
+      if (suggestions.length >= 3) break;
+    }
+
+    if (!suggestions.length) {
+      appendGihariLog("לא מצאתי חלונות זמן מתאימים בשבועיים הקרובים.");
+      return;
+    }
+
+    let msg = "מצאתי אפשרויות זמן עבורך:<br>";
+    suggestions.forEach((opt, idx) => {
+      const dk = dateKeyFromDate(opt.date);
+      const h = String(Math.floor(opt.start / 60)).padStart(2, "0");
+      const m2 = String(opt.start % 60).padStart(2, "0");
+      msg += (idx + 1) + ". " + dk + " בשעה " + h + ":" + m2 + "<br>";
+    });
+
+    appendGihariLog(msg);
+    return;
+  }
+
+  // 4) "אני צריך להתאמן X פעמים השבוע ... כל אימון Y שעות"
+  if (text.includes("להתאמן") && text.includes("פעמים") && text.includes("שבוע")) {
+    let times = 3;
+
+    const timesMatch = text.match(/([א-ת0-9]+)\s*פעמים/);
+    if (timesMatch) {
+      const word = timesMatch[1];
+      const map = { "פעמיים": 2, "שתיים": 2, "שלוש": 3, "ארבע": 4 };
+      if (map[word] != null) times = map[word];
+      else if (!isNaN(parseInt(word, 10))) times = parseInt(word, 10);
+    }
+
+    let hours = 1;
+    const hMatch2 = text.match(/([א-ת0-9.]+)\s*שעות?/);
+    if (hMatch2) {
+      const word = hMatch2[1];
+      const map = { "חצי": 0.5, "שעה": 1, "שעתיים": 2, "שתיים": 2, "שלוש": 3, "ארבע": 4 };
+      if (map[word] != null) hours = map[word];
+      else if (!isNaN(parseFloat(word))) hours = parseFloat(word);
+    }
+
+    const duration = Math.round(hours * 60);
+
+    const today = new Date();
+    let created = 0;
+
+    outer: for (let offset = 0; offset <= 7; offset++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + offset);
+
+      const { freeSlots } = computeLoadAndFreeSlots(d);
+
+      for (const [start, end] of freeSlots) {
+        if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {
+          const dk = dateKeyFromDate(d);
+          const refPath = ref(db, "events/" + dk);
+          const newRef = push(refPath);
+
+          const startH = String(Math.floor(start / 60)).padStart(2, "0");
+          const startM = String(start % 60).padStart(2, "0");
+          const endMinutes = start + duration;
+          const endH = String(Math.floor(endMinutes / 60)).padStart(2, "0");
+          const endM = String(endMinutes % 60).padStart(2, "0");
+
+          await set(newRef, {
+            type: "task",
+            title: "אימון",
+            owner: state.currentUser,
+            dateKey: dk,
+            startTime: startH + ":" + startM,
+            endTime: endH + ":" + endM,
+            duration,
+            urgency: "week",
+            _id: newRef.key
+          });
+
+          created++;
+          if (created >= times) break outer;
+        }
+      }
+    }
+
+    if (created === 0) {
+      appendGihariLog("לא הצלחתי למצוא זמן פנוי לאימונים השבוע.");
+    } else {
+      appendGihariLog("קבעתי " + created + " אימונים בשבוע הקרוב.");
+      loadMonthEvents();
+    }
+    return;
+  }
+
+  // 5) ברירת מחדל – לא הבין
+  appendGihariLog(
+    "שמעתי מה אמרת, אבל לא לגמרי בטוח מה לעשות עם זה. נסה להגיד למשל: 'תוסיף לי משימה למחר בשמונה בבוקר'."
+  );
 }
-// יצירת אירוע אמיתי – לדוגמה: "בעוד שבוע ביום שני בשעה חמש אחר הצהריים תוסיף לי הופעה של פאר טסי בקיסריה"
-if (text.includes("תוסיף לי")) {
-createEventFromGihari(text);
-
-}
-
-// "מתי יש לי זמן ..." עם משך מסוים
-if (text.includes("מתי יש לי זמן")) {
-let hours = 1;
-const hMatch = text.match(/([א-ת0-9]+)\s*שעה/);
-if (hMatch) {
-const word = hMatch[1];
-const map = { "חצי": 0.5, "שעה": 1, "שעתיים": 2, "שתיים": 2, "שלוש": 3, "ארבע": 4 };
-if (map[word] != null) hours = map[word];
-else if (!isNaN(parseFloat(word))) hours = parseFloat(word);
-}
-
-const duration = Math.round(hours * 60);  
-const today = new Date();  
-const suggestions = [];  
-
-for (let offset = 0; offset <= 14; offset++) {  
-  const d = new Date(today);  
-  d.setDate(d.getDate() + offset);  
-  const { freeSlots } = computeLoadAndFreeSlots(d);  
-
-  for (const [start, end] of freeSlots) {  
-    if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {  
-      suggestions.push({ date: new Date(d), start });  
-      if (suggestions.length >= 3) break;  
-    }  
-  }  
-  if (suggestions.length >= 3) break;  
-}  
-
-if (!suggestions.length) {  
-  appendGihariLog("לא מצאתי חלונות זמן מתאימים בשבועיים הקרובים.");  
-  
 
 
-let msg = "מצאתי אפשרויות זמן עבורך:<br>";  
-suggestions.forEach((opt, idx) => {  
-  const dk = dateKeyFromDate(opt.date);  
-  const h = String(Math.floor(opt.start / 60)).padStart(2, "0");  
-  const m = String(opt.start % 60).padStart(2, "0");  
-  msg += (idx + 1) + ". " + dk + " בשעה " + h + ":" + m + "<br>";  
-});  
-
-appendGihariLog(msg);  
-return;
-
-}
-
-// "אני צריך להתאמן שלוש פעמים השבוע ... כל אימון שלוש שעות"
-if (text.includes("להתאמן") && text.includes("פעמים") && text.includes("שבוע")) {
-let times = 3;
-
-const timesMatch = text.match(/([א-ת0-9]+)\s*פעמים/);  
-if (timesMatch) {  
-  const word = timesMatch[1];  
-  const map = { "פעמיים": 2, "שתיים": 2, "שלוש": 3, "ארבע": 4 };  
-  if (map[word] != null) times = map[word];  
-  else if (!isNaN(parseInt(word, 10))) times = parseInt(word, 10);  
-}  
-
-let hours = 1;  
-const hMatch2 = text.match(/([א-ת0-9]+)\s*שעות?/);  
-if (hMatch2) {  
-  const word = hMatch2[1];  
-  const map = { "חצי": 0.5, "שעה": 1, "שעתיים": 2, "שתיים": 2, "שלוש": 3 };  
-  if (map[word] != null) hours = map[word];  
-  else if (!isNaN(parseFloat(word))) hours = parseFloat(word);  
-}  
-
-const duration = Math.round(hours * 60);  
-
-const today = new Date();  
-let created = 0;  
-
-outer: for (let offset = 0; offset <= 7; offset++) {  
-  const d = new Date(today);  
-  d.setDate(d.getDate() + offset);  
-  const { freeSlots } = computeLoadAndFreeSlots(d);  
-
-  for (const [start, end] of freeSlots) {  
-    if (end - start >= duration && start >= 8 * 60 && end <= 23 * 60) {  
-      const dk = dateKeyFromDate(d);  
-      const refPath = ref(db, "events/" + dk);  
-      const newRef = push(refPath);  
-
-      const startH = String(Math.floor(start / 60)).padStart(2, "0");  
-      const startM = String(start % 60).padStart(2, "0");  
-      const endMinutes = start + duration;  
-      const endH = String(Math.floor(endMinutes / 60)).padStart(2, "0");  
-      const endM = String(endMinutes % 60).padStart(2, "0");  
-
-      set(newRef, {  
-        type: "task",  
-        title: "אימון",  
-        owner: state.currentUser,  
-        dateKey: dk,  
-        startTime: startH + ":" + startM,  
-        endTime: endH + ":" + endM,  
-        duration,  
-        urgency: "week",  
-        _id: newRef.key  
-      });  
-
-      created++;  
-      if (created >= times) break outer;  
-    }  
-  }  
-}  
-
-if (created === 0) {  
-  appendGihariLog("לא הצלחתי למצוא זמן פנוי לאימונים השבוע.");  
-} else {  
-  appendGihariLog("קבעתי " + created + " אימונים בשבוע הקרוב.");  
-  loadMonthEvents();  
-}  
-return;
-
-}
-
-// ברירת מחדל – לא הבין
-appendGihariLog(
-"שמעתי מה אמרת, אבל לא לגמרי בטוח מה לעשות עם זה. נסה להגיד למשל: 'תוסיף לי משימה למחר בשמונה בבוקר'."
-);
-}
-
+// ===============================
 // Stub – כדי שלא יהיה Error כשג'יחרי קורא לה
+// (אם כבר יש לך loadMonthEvents אמיתית – תשאיר רק אחת!)
+// ===============================
 function loadMonthEvents() {
-renderCalendar();
+  renderCalendar();
 }
 
+
+// ===============================
+// Postpone modal helpers
+// ===============================
 let _postponeTask = null;
 
 function openPostponeModal(task) {
-_postponeTask = task;
-document.getElementById("postponeModal").classList.remove("hidden");
+  _postponeTask = task;
+  document.getElementById("postponeModal").classList.remove("hidden");
 
-document.querySelectorAll("[data-close-postpone]").forEach(b =>
-b.onclick = () =>
-document.getElementById("postponeModal").classList.add("hidden")
-);
+  document.querySelectorAll("[data-close-postpone]").forEach((b) =>
+    (b.onclick = () => document.getElementById("postponeModal").classList.add("hidden"))
+  );
 
-document.getElementById("postponeOk").onclick = () => {
-const v = document.getElementById("postponeDateInput").value;
-if (!v) return;
-moveTaskToDate(_postponeTask, v);
-document.getElementById("postponeModal").classList.add("hidden");
-};
+  document.getElementById("postponeOk").onclick = () => {
+    const v = document.getElementById("postponeDateInput").value;
+    if (!v) return;
+    moveTaskToDate(_postponeTask, v);
+    document.getElementById("postponeModal").classList.add("hidden");
+  };
 }
 
 async function moveTaskToDate(task, newDateKey) {
-const id = task._id || task.id;
-if (!id) return;
+  const id = task._id || task.id;
+  if (!id) return;
 
-await set(ref(db, events/${newDateKey}/${id}), {
-...task,
-dateKey: newDateKey
-});
+  // ✅ תיקון: חייב backticks + מחרוזות נתיב תקינות
+  await set(ref(db, `events/${newDateKey}/${id}`), {
+    ...task,
+    dateKey: newDateKey
+  });
 
-await remove(ref(db, events/${task.dateKey}/${id}));
+  await remove(ref(db, `events/${task.dateKey}/${id}`));
 }
+
+
+// ===============================
+// Recurring materializer
+// ===============================
 async function materializeRecurringTask(task, daysAhead) {
-const start = new Date(task.dateKey);
+  // אם dateKey אצלך בפורמט YYYY-MM-DD זה יעבוד; אחרת צריך התאמה
+  const start = new Date(task.dateKey);
+  if (isNaN(start.getTime())) return;
 
-for (let i = 1; i <= daysAhead; i++) {
-const d = new Date(start);
-d.setDate(d.getDate() + i);
+  for (let i = 1; i <= daysAhead; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
 
-if (task.recurring === "weekly" && d.getDay() !== start.getDay()) continue;  
-if (task.recurring === "monthly" && d.getDate() !== start.getDate()) continue;  
+    if (task.recurring === "weekly" && d.getDay() !== start.getDay()) continue;
+    if (task.recurring === "monthly" && d.getDate() !== start.getDate()) continue;
 
-const dk = d.toISOString().split("T")[0];  
-const id = `${task._id}_${dk}`;  
+    const dk = d.toISOString().split("T")[0];
+    const id = `${task._id}_${dk}`;
 
-await set(ref(db, `events/${dk}/${id}`), {  
-  ...task,  
-  _id: id,  
-  dateKey: dk  
-});
-
-}
+    await set(ref(db, `events/${dk}/${id}`), {
+      ...task,
+      _id: id,
+      dateKey: dk
+    });
+  }
 }
