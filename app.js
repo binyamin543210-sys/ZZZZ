@@ -50,9 +50,12 @@ return "" + y + "-" + m + "-" + d + "";
 }
 
 function parseDateKey(key) {
-const [y, m, d] = key.split("-").map(Number);
-return new Date(y, m - 1, d);
+  const [y, m, d] = key.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setHours(12, 0, 0, 0); // מונע סטיית יום
+  return dt;
 }
+
 
 function formatHebrewDate(date) {
 try {
@@ -552,9 +555,21 @@ list.appendChild(item);
 }
 
 function markTaskDone(task) {
-const refPath = ref(db, "events/" + task.dateKey + "/" + task.id + "");
-remove(refPath);
+  const id = task._id || task.id;
+  if (!id) return;
+
+  // שומר במשימות שבוצעו
+  const doneRef = ref(db, "tasksDone/" + id);
+  set(doneRef, {
+    ...task,
+    doneAt: Date.now()
+  });
+
+  // מוחק מהאירועים הרגילים
+  const fromRef = ref(db, "events/" + task.dateKey + "/" + id);
+  remove(fromRef);
 }
+
 
 function postponeTask(task) {
 const baseDate = task.dateKey && task.dateKey !== "undated" ? parseDateKey(task.dateKey) : new Date();
@@ -1889,7 +1904,8 @@ async function materializeRecurringTask(task, daysAhead) {
     if (task.recurring === "weekly" && d.getDay() !== start.getDay()) continue;
     if (task.recurring === "monthly" && d.getDate() !== start.getDate()) continue;
 
-    const dk = d.toISOString().split("T")[0];
+const dk = dateKeyFromDate(d);
+
     const id = `${task._id}_${dk}`;
 
     await set(ref(db, `events/${dk}/${id}`), {
