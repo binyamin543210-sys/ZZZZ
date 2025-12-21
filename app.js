@@ -59,28 +59,21 @@ function parseDateKey(key) {
 
 
 function formatHebrewDate(date) {
-try {
-const hd = new Hebcal.HDate(date);
-return hd.renderGematriya ? hd.renderGematriya() : hd.toString("h");
-} catch (e) {
-return "";
-}
+  try {
+    if (typeof HDate === "undefined") return "";
+    const hd = new HDate(date);
+    return hd.renderGematriya();
+  } catch (e) {
+    return "";
+  }
 }
 
 function getHebrewMonthYearLabel(date) {
   try {
-    const start = new Hebcal.HDate(new Date(date.getFullYear(), date.getMonth(), 1));
-    const end = new Hebcal.HDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
-
-    const startMonth = start.getMonthName("h");
-    const endMonth = end.getMonthName("h");
-    const year = end.getFullYear();
-
-    const months =
-      startMonth === endMonth ? startMonth : startMonth + "–" + endMonth;
-
-    return months + " " + year;
-  } catch {
+    if (typeof HDate === "undefined") return "";
+    const hd = new HDate(date);
+    return hd.getMonthName("he") + " " + hd.getFullYear();
+  } catch (e) {
     return "";
   }
 }
