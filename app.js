@@ -67,16 +67,21 @@ return "";
 }
 
 function getHebrewMonthYearLabel(date) {
-try {
-const hd = new Hebcal.HDate(date);
-const parts = hd.toString("h").split(" ");
-if (parts.length >= 2) {
-return parts.slice(1).join(" ");
-}
-return hd.toString("h");
-} catch (e) {
-return "";
-}
+  try {
+    const start = new Hebcal.HDate(new Date(date.getFullYear(), date.getMonth(), 1));
+    const end = new Hebcal.HDate(new Date(date.getFullYear(), date.getMonth() + 1, 0));
+
+    const startMonth = start.getMonthName("h");
+    const endMonth = end.getMonthName("h");
+    const year = end.getFullYear();
+
+    const months =
+      startMonth === endMonth ? startMonth : startMonth + "–" + endMonth;
+
+    return months + " " + year;
+  } catch {
+    return "";
+  }
 }
 
 function getCity() {
@@ -615,7 +620,14 @@ modal.classList.remove("hidden");
 
 const dayNumber = date.getDate();
 el("dayModalGreg").textContent = String(dayNumber);
-el("dayModalHeb").textContent = dayName(date);
+// אות עברית של היום בלבד (כ״ב, י״ג וכו')
+try {
+  const hd = new Hebcal.HDate(date);
+  el("dayModalHeb").textContent = hd.renderGematriya();
+} catch {
+  el("dayModalHeb").textContent = "";
+}
+
 
 const dateKey = dateKeyFromDate(date);
 renderDayEvents(dateKey);
