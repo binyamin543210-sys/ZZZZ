@@ -802,7 +802,7 @@ btn.onclick = () => modal.classList.add("hidden");
 qs(".modal-backdrop", modal).onclick = () => modal.classList.add("hidden");
 }
 
-function handleEditFormSubmit(ev) {
+async function handleEditFormSubmit(ev) {
 ev.preventDefault();
 const form = ev.target;
 
