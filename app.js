@@ -1657,36 +1657,51 @@ renderShoppingList();
 
 document.addEventListener("DOMContentLoaded", initApp);
 
-// --- Gihari advanced voice handler (override) ---
 function handleGihariVoiceCommand(text) {
-if (!text) return;
-text = text.replace(/[.,]/g, " ").trim();
+  logGihariCommand(text);
 
-logGihariCommand(text);
+  // טיפול בפקודות תאריך: היום / מחר / מחרתיים / שבוע הבא / תאריך מפורש
+  if (
+    text.includes("היום") ||
+    text.includes("מחר") ||
+    text.includes("מחרתיים") ||
+    text.includes("שבוע הבא")
+  ) {
+    let targetDate = new Date(state.currentDate);
 
-// פתיחת אירוע/משימה בתאריך (רק פותח חלון עריכה)
-if (text.includes("תפתח") || text.includes("תיצור") || text.includes("תכניס")) {
-let targetDate = new Date(state.currentDate);
-if (text.includes("למחר")) {
-targetDate.setDate(targetDate.getDate() + 1);
-} else if (text.includes("לשבוע הבא")) {
-targetDate.setDate(targetDate.getDate() + 7);
-} else {
-const m = text.match(/ל([0-9]{1,2})./-./-/);
-}
-if (m) {
-const d = parseInt(m[1], 10);
-const mo = parseInt(m[2], 10) - 1;
-const y = m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10);
-targetDate = new Date(y, mo, d);
-}
-}
-const dk = dateKeyFromDate(targetDate);
-openEditModal({ dateKey: dk });
-appendGihariLog("פתחתי חלונית אירוע/משימה לתאריך " + dk);
-return;
-}
+    if (text.includes("מחרתיים")) {
+      targetDate.setDate(targetDate.getDate() + 2);
 
+    } else if (text.includes("מחר")) {
+      targetDate.setDate(targetDate.getDate() + 1);
+
+    } else if (text.includes("שבוע הבא")) {
+      targetDate.setDate(targetDate.getDate() + 7);
+
+    } else {
+      // ניסיון חילוץ תאריך מפורש: dd/mm/yy או dd/mm/yyyy
+      const m = text.match(/([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2,4})/);
+
+      if (m) {
+        const d = parseInt(m[1], 10);
+        const mo = parseInt(m[2], 10) - 1;
+        const y =
+          m[3].length === 2
+            ? 2000 + parseInt(m[3], 10)
+            : parseInt(m[3], 10);
+
+        targetDate = new Date(y, mo, d);
+      }
+    }
+
+    const dk = dateKeyFromDate(targetDate);
+    openEditModal({ dateKey: dk });
+    appendGihariLog("📅 פתיחת חלונית אירוע/משימה לתאריך " + dk);
+    return;
+  }
+
+  // אם לא זוהתה פקודת תאריך – ממשיכים ללוגיקות אחרות
+}
 // יצירת אירוע אמיתי – לדוגמה: "בעוד שבוע ביום שני בשעה חמש אחר הצהריים תוסיף לי הופעה של פאר טסי בקיסריה"
 if (text.includes("תוסיף לי")) {
 createEventFromGihari(text);
