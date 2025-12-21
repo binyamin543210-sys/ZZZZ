@@ -4,9 +4,6 @@
 // - Chart.js לסטטיסטיקות
 // - firebase-config.js שמייצא firebaseApp, db
 
-import * as Hebcal from "https://cdn.jsdelivr.net/npm/hebcal@2.0.2/+esm";
-
-import Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.esm.js";
 
 import {
 ref,
