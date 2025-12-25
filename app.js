@@ -60,9 +60,10 @@ function parseDateKey(key) {
 
 function formatHebrewDate(date) {
   try {
-    if (typeof HDate === "undefined") return "";
-    const hd = new HDate(date);
-    return hd.renderGematriya();
+    // Hebcal נטען כ-globals (Hebcal, Hebcal.HDate). אצלך HDate לא קיים לבד.
+    if (typeof Hebcal === "undefined" || !Hebcal.HDate) return "";
+    const hd = new Hebcal.HDate(date);
+    return hd.renderGematriya(); // מחזיר יום עברי בגימטריה (כ"ב, י"ג וכו')
   } catch (e) {
     return "";
   }
@@ -70,9 +71,10 @@ function formatHebrewDate(date) {
 
 function getHebrewMonthYearLabel(date) {
   try {
-    if (typeof HDate === "undefined") return "";
-    const hd = new HDate(date);
-    return hd.getMonthName("he") + " " + hd.getFullYear();
+    return new Intl.DateTimeFormat("he-u-ca-hebrew", {
+      month: "long",
+      year: "numeric"
+    }).format(date);
   } catch (e) {
     return "";
   }
