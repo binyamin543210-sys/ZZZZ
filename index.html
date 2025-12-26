@@ -11,10 +11,10 @@
   <link rel="stylesheet" href="styles.css" />
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Hebcal -->
-  <script src="https://cdn.jsdelivr.net/npm/hebcal@2/dist/hebcal.min.js"></script>
+  <!-- ✅ Hebcal – browser build שעובד -->
+  <script src="https://www.hebcal.com/etc/hebcal.js"></script>
 
   <!-- App -->
   <script type="module" src="app.js"></script>
@@ -128,12 +128,14 @@
     </nav>
 
     <button id="btnFabAdd" class="fab-btn">+</button>
-
   </div>
 
+  <!-- Service Worker (פעם אחת!) -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js');
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
     }
   </script>
 
