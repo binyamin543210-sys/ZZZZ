@@ -4,7 +4,7 @@
 // - Chart.js לסטטיסטיקות
 // - firebase-config.js שמייצא firebaseApp, db
 
-
+const Hebcal = window.Hebcal;
 import {
 ref,
 onValue,
